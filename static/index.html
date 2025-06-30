@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Whiteboard-AI</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet"
+        href="https://unpkg.com/@excalidraw/excalidraw@0.18.1/dist/excalidraw.min.css">
+  <style>
+    html,body{margin:0;height:100%;font-family:system-ui,sans-serif}
+    #root{height:100%}
+    .toolbar{height:8vh;display:flex;align-items:center;gap:12px;
+             padding:0 16px;background:#f8f8f8;border-top:1px solid #ddd}
+    button{padding:6px 14px;border:1px solid #888;border-radius:4px;cursor:pointer}
+    button:hover{background:#eee}
+    .output{font-weight:600;margin-left:auto}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + Excalidraw UMD bundles -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@excalidraw/excalidraw@0.18.1/dist/excalidraw.production.min.js"></script>
+
+  <script type="text/javascript">
+    const {createElement, useRef, useState} = React;
+    const {Excalidraw} = ExcalidrawLib;
+
+    function App(){
+      const ref = useRef(null);
+      const [out, setOut] = useState("");
+
+      async function exportSelection(){
+        const api = ref.current;
+        if(!api){return null;}
+        const sel = api.getSceneElements().filter(el=>el.isSelected);
+        if(!sel.length){alert("Select something first"); return null;}
+        return await api.getPNG({elements:sel, exportBackground:false, includeShadow:false});
+      }
+
+      async function recognise(route){
+        const blob = await exportSelection();
+        if(!blob) return;
+        const fd = new FormData();
+        fd.append("file", blob, "sel.png");
+        try{
+          const res = await fetch("/"+route, {method:"POST", body:fd});
+          const json = await res.json();
+          setOut(json.pred);
+        }catch(e){
+          console.error(e); setOut("⚠️ error");
+        }
+      }
+
+      return createElement(
+        React.Fragment,
+        null,
+        createElement("div",{style:{height:"92vh"}},
+          createElement(Excalidraw,{ref})
+        ),
+        createElement("div",{className:"toolbar"},
+          createElement("button",{onClick:()=>recognise("digit")},"🔢 Recognise Digit"),
+          createElement("button",{onClick:()=>recognise("ocr")},"📝 OCR Text"),
+          createElement("span",{className:"output"}, out)
+        )
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(
+      createElement(App)
+    );
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+version: "3.11"
+
+services:
+  backend:
+    build: ./ml-service
+    container_name: whiteboard-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml-service:/app        # live-reload while editing Python
+    command: >
+      sh -c "
+        python download_models.py &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
