@@ -18,11 +18,20 @@ An open-source **AI whiteboard** that lets you draw freely, then:
 
 All inference happens locally (CPU-only by default) and return.
   
+---
+
+### Digit Recognize
+![Digit Recognize](image.png)
+
+### OCR Text
+![OCR Text](image-2.png)
+
+![OCR Text](image-1.png)
 
 
 ---
 
-## 1. Journey / Motivation
+## 1. Journey
 
 1. **Ideation**  
    I wanted an Excalidraw-smooth canvas attached to tiny, fast ML models that run **on low end devices**.
