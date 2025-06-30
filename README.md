@@ -1,14 +1,3 @@
----
-title: ScribbleSense
-emoji: 🔥
-colorFrom: yellow
-colorTo: gray
-sdk: docker
-pinned: false
-license: apache-2.0
-short_description: An open-source AI whiteboard - Draw, Recognise digit.
----
-
 # ScribbleSense [[Live](https://singharindam.github.io/ScribbleSense/frontend/index.html) | [GitHub](https://github.com/SinghArindam/ScribbleSense)]
 
 An open-source **AI whiteboard** that lets you draw freely, then:
