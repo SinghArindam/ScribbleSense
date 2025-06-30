@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Whiteboard - AI-Powered Drawing</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Toolbar -->
+        <header class="toolbar">
+            <div class="toolbar-section">
+                <h1 class="app-title">Smart Whiteboard</h1>
+            </div>
+            
+            <div class="toolbar-section">
+                <div class="tool-group">
+                    <label class="form-label">Tools</label>
+                    <div class="button-group">
+                        <button class="btn btn--secondary tool-btn active" data-tool="pen" title="Pen">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                <path d="M2 2l7.586 7.586"></path>
+                            </svg>
+                        </button>
+                        <button class="btn btn--secondary tool-btn" data-tool="eraser" title="Eraser">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 20H7l3-3 6.5-6.5a2.12 2.12 0 0 1 3 3L13 20Z"></path>
+                                <path d="m5 16 3 3"></path>
+                            </svg>
+                        </button>
+                        <button class="btn btn--outline" id="clearCanvas" title="Clear Canvas">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <label class="form-label">Colors</label>
+                    <div class="color-palette">
+                        <button class="color-btn active" data-color="#000000" style="background-color: #000000" title="Black"></button>
+                        <button class="color-btn" data-color="#3b82f6" style="background-color: #3b82f6" title="Blue"></button>
+                        <button class="color-btn" data-color="#ef4444" style="background-color: #ef4444" title="Red"></button>
+                        <button class="color-btn" data-color="#10b981" style="background-color: #10b981" title="Green"></button>
+                        <button class="color-btn" data-color="#f59e0b" style="background-color: #f59e0b" title="Yellow"></button>
+                        <button class="color-btn" data-color="#8b5cf6" style="background-color: #8b5cf6" title="Purple"></button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <label class="form-label">Stroke Width</label>
+                    <div class="stroke-control">
+                        <input type="range" id="strokeWidth" min="1" max="10" value="2" class="stroke-slider">
+                        <span class="stroke-value">2px</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="tool-group">
+                    <label class="form-label">AI Tools</label>
+                    <div class="button-group">
+                        <button class="btn btn--primary" id="recognizeDigit" title="Recognize Digit">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <path d="M9 9h6v6h-6z"></path>
+                            </svg>
+                            Recognize Digit
+                        </button>
+                        <button class="btn btn--primary" id="extractText" title="Extract Text (OCR)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14,2 14,8 20,8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10,9 9,9 8,9"></polyline>
+                            </svg>
+                            Extract Text
+                        </button>
+                        <button class="btn btn--outline" id="exportCanvas" title="Export as PNG">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7,10 12,15 17,10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="canvas-container">
+                <canvas id="drawingCanvas" width="1200" height="800"></canvas>
+                <div class="canvas-overlay" id="canvasOverlay"></div>
+            </div>
+
+            <!-- AI Results Panel -->
+            <aside class="results-panel" id="resultsPanel">
+                <div class="results-header">
+                    <h3>AI Results</h3>
+                    <button class="btn btn--sm btn--secondary" id="toggleResults" title="Hide Results">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="18,15 12,9 6,15"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <div class="results-content">
+                    <!-- Digit Recognition Results -->
+                    <div class="result-section" id="digitResults" style="display: none;">
+                        <h4>Digit Recognition</h4>
+                        <div class="digit-result">
+                            <div class="recognized-digit" id="recognizedDigit">-</div>
+                            <div class="confidence-score" id="confidenceScore">0%</div>
+                        </div>
+                        <div class="top-predictions" id="topPredictions"></div>
+                    </div>
+
+                    <!-- OCR Results -->
+                    <div class="result-section" id="ocrResults" style="display: none;">
+                        <h4>Extracted Text</h4>
+                        <textarea class="form-control ocr-text" id="extractedText" placeholder="Recognized text will appear here..." readonly rows="6"></textarea>
+                        <div class="ocr-confidence" id="ocrConfidence"></div>
+                    </div>
+
+                    <!-- Loading States -->
+                    <div class="loading-state" id="loadingDigit" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Recognizing digit...</p>
+                    </div>
+                    <div class="loading-state" id="loadingOCR" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Extracting text...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" id="emptyState">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M12 1v6m0 6v6"></path>
+                            <path d="m21 12-6 0m-6 0-6 0"></path>
+                        </svg>
+                        <p>Draw something and use the AI tools to see results here</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="status-text" id="statusText">Ready to draw</span>
+            <div class="canvas-info">
+                <span id="canvasSize">1200 × 800</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
