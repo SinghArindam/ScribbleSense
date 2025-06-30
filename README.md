@@ -28,6 +28,8 @@ All inference happens locally (CPU-only by default) and return.
 
 ![OCR Text](image-1.png)
 
+![OCR Text](image-3.png)
+
 
 ---
 
