@@ -175,7 +175,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) for exhaustive commit-level notes.
 
 ## 12. License
 
-`MIT` — see [`LICENSE`](LICENSE).
+`Apache License` — see [`LICENSE`](LICENSE).
 
 ---
 
